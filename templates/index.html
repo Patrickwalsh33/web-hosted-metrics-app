@@ -40,6 +40,20 @@
             background-color: #f9f9f9;
             width: 45%;
         }
+        .refresh-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .refresh-button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -49,13 +63,15 @@
         <div class="metrics">
             <div class="metric">
                 <h3>RAM Usage</h3>
-                <p>{{ ram_usage }}%</p>
+                <p id="ramUsage">{{ ram_usage }}%</p>
             </div>
             <div class="metric">
                 <h3>Running Processes</h3>
-                <p>{{ running_processes }}</p>
+                <p id="runningProcesses">{{ running_processes }}</p>
             </div>
         </div>
+
+        <button class="refresh-button" onclick="fetchMetrics()">Refresh</button>
 
         <h2>RAM Usage Over Time</h2>
         <canvas id="ramChart"></canvas>
@@ -109,11 +125,15 @@
                 }
             });
 
-            // Function to fetch metrics periodically
+            // Function to fetch metrics when the button is clicked
             function fetchMetrics() {
                 fetch('/metrics')
                     .then(response => response.json())
                     .then(data => {
+                        // Update the displayed metrics
+                        document.getElementById('ramUsage').innerText = data.ram_usage + '%';
+                        document.getElementById('runningProcesses').innerText = data.running_processes;
+
                         const now = new Date().toLocaleTimeString();
                         ramChart.data.labels.push(now);
                         ramChart.data.datasets[0].data.push(data.ram_usage);
@@ -124,9 +144,6 @@
                         processChart.update();
                     });
             }
-
-            // Fetch metrics every 5 seconds
-            setInterval(fetchMetrics, 5000);
         </script>
     </div>
 </body>
