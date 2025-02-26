@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, render_template, jsonify
 import logging
 import os
 import psutil  # For system monitoring
@@ -31,21 +31,23 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return "<h1>System Monitoring Tool</h1>"
-
-@app.route('/status')
-def status():
     # Gather system metrics
-    cpu_usage = psutil.cpu_percent()
     ram_usage = psutil.virtual_memory().percent
     running_processes = len(psutil.pids())
     
     # Log the metrics
-    logger.info(f"CPU Usage: {cpu_usage}%, RAM Usage: {ram_usage}%, Running Processes: {running_processes}")
+    logger.info(f"RAM Usage: {ram_usage}%, Running Processes: {running_processes}")
     
-    # Return the metrics as JSON
+    # Render the index template with metrics
+    return render_template('index.html', ram_usage=ram_usage, running_processes=running_processes)
+
+@app.route('/metrics')
+def metrics():
+    # Gather system metrics for JSON response
+    ram_usage = psutil.virtual_memory().percent
+    running_processes = len(psutil.pids())
+    
     return jsonify({
-        'cpu_usage': cpu_usage,
         'ram_usage': ram_usage,
         'running_processes': running_processes
     })

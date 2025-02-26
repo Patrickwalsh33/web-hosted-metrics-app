@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Monitoring Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        canvas {
+            max-width: 100%;
+            margin: 20px 0;
+        }
+        .metrics {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .metric {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            width: 45%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>System Monitoring Tool</h1>
+        <h2>Current Metrics</h2>
+        <div class="metrics">
+            <div class="metric">
+                <h3>RAM Usage</h3>
+                <p>{{ ram_usage }}%</p>
+            </div>
+            <div class="metric">
+                <h3>Running Processes</h3>
+                <p>{{ running_processes }}</p>
+            </div>
+        </div>
+
+        <h2>RAM Usage Over Time</h2>
+        <canvas id="ramChart"></canvas>
+
+        <h2>Running Processes Over Time</h2>
+        <canvas id="processChart"></canvas>
+
+        <script>
+            const ramCtx = document.getElementById('ramChart').getContext('2d');
+            const ramChart = new Chart(ramCtx, {
+                type: 'bar',  // Change to bar chart for RAM usage
+                data: {
+                    labels: [],  // Time labels will be added dynamically
+                    datasets: [{
+                        label: 'RAM Usage (%)',
+                        data: [],  // RAM usage data will be added dynamically
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            const processCtx = document.getElementById('processChart').getContext('2d');
+            const processChart = new Chart(processCtx, {
+                type: 'line',  // Keep line chart for running processes
+                data: {
+                    labels: [],  // Time labels will be added dynamically
+                    datasets: [{
+                        label: 'Running Processes',
+                        data: [],  // Running processes data will be added dynamically
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Function to fetch metrics periodically
+            function fetchMetrics() {
+                fetch('/metrics')
+                    .then(response => response.json())
+                    .then(data => {
+                        const now = new Date().toLocaleTimeString();
+                        ramChart.data.labels.push(now);
+                        ramChart.data.datasets[0].data.push(data.ram_usage);
+                        ramChart.update();
+
+                        processChart.data.labels.push(now);
+                        processChart.data.datasets[0].data.push(data.running_processes);
+                        processChart.update();
+                    });
+            }
+
+            // Fetch metrics every 5 seconds
+            setInterval(fetchMetrics, 5000);
+        </script>
+    </div>
+</body>
+</html>
