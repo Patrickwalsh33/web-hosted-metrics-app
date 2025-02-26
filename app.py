@@ -2,6 +2,7 @@ from flask import Flask, render_template, jsonify
 import logging
 import os
 import psutil  # For system monitoring
+import mysql.connector  # For MySQL connection
 from lib_config.config import load_config
 
 # Configure logging
@@ -29,6 +30,15 @@ logger.addHandler(file_handler)
 # Create Flask application
 app = Flask(__name__)
 
+# MySQL database connection
+def get_db_connection():
+    return mysql.connector.connect(
+        host='patrickwalsh.mysql.pythonanywhere-services.com',  
+        user='patrickwalsh',  
+        password='yz3RMDCNDk.xpL.',  
+        database='patrickwalsh$systemMetricsApp'  
+    )
+
 @app.route('/')
 def index():
     # Gather system metrics
@@ -46,6 +56,14 @@ def metrics():
     # Gather system metrics for JSON response
     ram_usage = psutil.virtual_memory().percent
     running_processes = len(psutil.pids())
+    
+    # Insert data into the database
+    db_connection = get_db_connection()
+    cursor = db_connection.cursor()
+    cursor.execute("INSERT INTO system_metrics (ram_usage, running_processes) VALUES (%s, %s)", (ram_usage, running_processes))
+    db_connection.commit()
+    cursor.close()
+    db_connection.close()
     
     return jsonify({
         'ram_usage': ram_usage,
